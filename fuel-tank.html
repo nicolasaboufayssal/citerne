@@ -1,0 +1,221 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+  <meta charset="UTF-8"/>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Jauge Citerne</title>
+  <style>
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    body {
+      font-family: system-ui, sans-serif;
+      background: #f4f4f0;
+      color: #1a1a1a;
+      min-height: 100vh;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      padding: 2rem 1rem;
+    }
+    h1 {
+      font-size: 1.4rem;
+      font-weight: 600;
+      margin-bottom: 0.3rem;
+      text-align: center;
+    }
+    .subtitle {
+      font-size: 0.85rem;
+      color: #666;
+      margin-bottom: 2rem;
+      text-align: center;
+    }
+    .container {
+      background: #fff;
+      border-radius: 16px;
+      padding: 1.5rem;
+      width: 100%;
+      max-width: 480px;
+      box-shadow: 0 2px 12px rgba(0,0,0,0.08);
+    }
+    svg { display: block; margin: 0 auto 1.5rem; }
+
+    .input-section { margin-bottom: 1.5rem; }
+    .input-section label {
+      display: block;
+      font-size: 0.9rem;
+      color: #555;
+      margin-bottom: 0.5rem;
+      font-weight: 500;
+    }
+    .input-row {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+    }
+    input[type=range] {
+      flex: 1;
+      height: 6px;
+      accent-color: #1D9E75;
+      cursor: pointer;
+    }
+    input[type=number] {
+      width: 80px;
+      font-size: 1.4rem;
+      font-weight: 600;
+      text-align: center;
+      border: 1.5px solid #ddd;
+      border-radius: 10px;
+      padding: 6px 4px;
+      color: #1a1a1a;
+      background: #fafafa;
+    }
+    input[type=number]:focus { outline: none; border-color: #1D9E75; }
+    .cm-label { font-size: 1rem; color: #888; }
+
+    .pct-bar-bg {
+      background: #e8e8e4;
+      border-radius: 99px;
+      height: 12px;
+      overflow: hidden;
+      margin: 1rem 0 0.4rem;
+    }
+    .pct-bar {
+      height: 12px;
+      border-radius: 99px;
+      background: #1D9E75;
+      transition: width 0.15s;
+    }
+    .pct-label {
+      font-size: 0.85rem;
+      color: #555;
+      text-align: right;
+      margin-bottom: 1.2rem;
+    }
+
+    .cards {
+      display: grid;
+      grid-template-columns: 1fr 1fr 1fr;
+      gap: 10px;
+      margin-bottom: 0.5rem;
+    }
+    .card {
+      background: #f4f4f0;
+      border-radius: 12px;
+      padding: 12px 10px;
+      text-align: center;
+    }
+    .card-label { font-size: 0.72rem; color: #888; margin-bottom: 4px; }
+    .card-value { font-size: 1.25rem; font-weight: 600; color: #1a1a1a; }
+    .card-unit { font-size: 0.72rem; color: #aaa; margin-top: 2px; }
+    .card.main { background: #e6f5f0; }
+    .card.main .card-value { color: #0F6E56; font-size: 1.5rem; }
+    .card.main .card-label { color: #4aaa8a; }
+
+    .footer {
+      margin-top: 1.2rem;
+      font-size: 0.75rem;
+      color: #bbb;
+      text-align: center;
+    }
+  </style>
+</head>
+<body>
+  <h1>Jauge Citerne</h1>
+  <p class="subtitle">Cylindre horizontal — L 4.35 m · ∅ 2.35 m</p>
+
+  <div class="container">
+    <svg width="300" height="150" viewBox="0 0 300 150" xmlns="http://www.w3.org/2000/svg" id="tank-svg">
+      <defs>
+        <clipPath id="tank-clip">
+          <ellipse cx="150" cy="75" rx="112" ry="67"/>
+        </clipPath>
+      </defs>
+      <ellipse cx="150" cy="75" rx="112" ry="67" fill="#f0f0ec" stroke="#ccc" stroke-width="1.5"/>
+      <rect id="fuel-fill" x="38" y="75" width="224" height="67" clip-path="url(#tank-clip)" fill="#5DCAA5" opacity="0.6"/>
+      <ellipse cx="150" cy="75" rx="112" ry="67" fill="none" stroke="#bbb" stroke-width="1.5"/>
+      <line id="level-line" x1="38" y1="75" x2="262" y2="75" stroke="#0F6E56" stroke-width="1.5" stroke-dasharray="5,3"/>
+      <text id="level-label" x="266" y="79" font-size="11" fill="#0F6E56" font-family="system-ui,sans-serif" font-weight="600"></text>
+    </svg>
+
+    <div class="input-section">
+      <label>Niveau mesuré dans la citerne</label>
+      <div class="input-row">
+        <input type="range" id="slider" min="0" max="235" value="100" step="1"/>
+        <input type="number" id="numInput" min="0" max="235" value="100" step="1"/>
+        <span class="cm-label">cm</span>
+      </div>
+    </div>
+
+    <div class="pct-bar-bg"><div class="pct-bar" id="pct-bar" style="width:0%"></div></div>
+    <div class="pct-label" id="pct-label">Remplissage : —</div>
+
+    <div class="cards">
+      <div class="card main">
+        <div class="card-label">Volume actuel</div>
+        <div class="card-value" id="card-litres">—</div>
+        <div class="card-unit">litres</div>
+      </div>
+      <div class="card">
+        <div class="card-label">Vide restant</div>
+        <div class="card-value" id="card-vide">—</div>
+        <div class="card-unit">litres</div>
+      </div>
+      <div class="card">
+        <div class="card-label">Capacité totale</div>
+        <div class="card-value" id="card-total">—</div>
+        <div class="card-unit">litres</div>
+      </div>
+    </div>
+
+    <div class="footer">Calcul par segment circulaire · r = 1.175 m · L = 4.35 m</div>
+  </div>
+
+  <script>
+    const R = 1.175, L = 4.35, D = 2 * R;
+    const totalVol = Math.PI * R * R * L * 1000;
+
+    function calcLitres(h_cm) {
+      const h = Math.min(Math.max(h_cm / 100, 0), D);
+      const segment = R*R * Math.acos((R - h) / R) - (R - h) * Math.sqrt(2*R*h - h*h);
+      return segment * L * 1000;
+    }
+
+    const slider = document.getElementById('slider');
+    const numInput = document.getElementById('numInput');
+    const fuelFill = document.getElementById('fuel-fill');
+    const levelLine = document.getElementById('level-line');
+    const levelLabel = document.getElementById('level-label');
+    const svgCY = 75, svgRY = 67;
+
+    function fmt(n) { return Math.round(n).toLocaleString('fr-FR'); }
+
+    function update(val) {
+      const h = Math.min(Math.max(parseFloat(val) || 0, 0), 235);
+      slider.value = h;
+      numInput.value = h;
+
+      const litres = calcLitres(h);
+      const pct = litres / totalVol * 100;
+      const vide = totalVol - litres;
+
+      document.getElementById('card-litres').textContent = fmt(litres);
+      document.getElementById('card-vide').textContent = fmt(vide);
+      document.getElementById('card-total').textContent = fmt(totalVol);
+      document.getElementById('pct-bar').style.width = pct.toFixed(1) + '%';
+      document.getElementById('pct-label').textContent = 'Remplissage : ' + pct.toFixed(1) + '%';
+
+      const yFuel = svgCY + svgRY - (h / 235) * (2 * svgRY);
+      fuelFill.setAttribute('y', yFuel);
+      fuelFill.setAttribute('height', svgCY + svgRY - yFuel);
+      levelLine.setAttribute('y1', yFuel);
+      levelLine.setAttribute('y2', yFuel);
+      levelLabel.setAttribute('y', yFuel + 4);
+      levelLabel.textContent = h + ' cm';
+    }
+
+    slider.addEventListener('input', () => update(slider.value));
+    numInput.addEventListener('input', () => update(numInput.value));
+    numInput.addEventListener('change', () => update(numInput.value));
+    update(100);
+  </script>
+</body>
+</html>
